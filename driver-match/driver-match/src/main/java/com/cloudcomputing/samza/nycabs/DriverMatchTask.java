@@ -224,18 +224,18 @@ public class DriverMatchTask implements StreamTask, InitableTask {
 
         String type = (String) msg.get("type");
         if (type.equals("LEAVING_BLOCK")) {
-            String driverId = (String) msg.get("driverId");
+            String driverId = msg.get("driverId").toString();
             String status = (String) msg.get("available");
             processLeavingBlock(blockId, driverId, longitude, latitude, status);
         } else if (type.equals("ENTERING_BLOCK")) {
-            String driverId = (String) msg.get("driverId");
+            String driverId = msg.get("driverId").toString();
             String status = (String) msg.get("available");
             Double rating = (Double) msg.get("rating");
             Integer salary = (Integer) msg.get("salary");
             String gender = (String) msg.get("gender");
             processEnteringBlock(blockId, driverId, longitude, latitude, status, rating, salary, gender);
         } else if (type.equals("RIDE_COMPLETE")) {
-            String driverId = (String) msg.get("driverId");
+            String driverId = msg.get("driverId").toString();
             Double rating = (Double) msg.get("rating");
             Integer salary = (Integer) msg.get("salary");
             String gender = (String) msg.get("gender");
@@ -255,7 +255,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      */
     private void processDriverLocation(Map<String, Object> msg) {
         String blockId = msg.get("blockId").toString();
-        String driverId = (String) msg.get("driverId");
+        String driverId = msg.get("driverId").toString();
         Double longitude = (Double) msg.get("longitude");
         Double latitude = (Double) msg.get("latitude");
 
