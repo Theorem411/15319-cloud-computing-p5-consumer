@@ -25,3 +25,6 @@ replay_pid*
 
 # credentials
 *.pem
+
+# large trace file
+trace_task2
