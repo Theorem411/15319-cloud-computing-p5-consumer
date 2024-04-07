@@ -218,7 +218,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      * process event stream message
      */
     private void processEvents(Map<String, Object> msg, MessageCollector collector) {
-        String blockId = (String) msg.get("blockId");
+        String blockId = msg.get("blockId").toString();
         Double longitude = (Double) msg.get("longitude");
         Double latitude = (Double) msg.get("latitude");
 
@@ -254,7 +254,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      * process driver-locations stream message
      */
     private void processDriverLocation(Map<String, Object> msg) {
-        String blockId = (String) msg.get("blockId");
+        String blockId = msg.get("blockId").toString();
         String driverId = (String) msg.get("driverId");
         Double longitude = (Double) msg.get("longitude");
         Double latitude = (Double) msg.get("latitude");
