@@ -111,13 +111,13 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      * READ Samza API part in Writeup to understand how to start
      */
     private double MAX_MONEY = 100.0;
-    private KeyValueStore<Integer, Map<Integer, Object>> driversInBlock;
+    private KeyValueStore<String, Map<String, Object>> driversLoc;
 
-    private DriverInfo addOrCreateDriverInfo(Integer blockId, Integer driverId) {
-        if (driversInBlock.get(blockId) == null) {
-            driversInBlock.put(blockId, new HashMap<>());
+    private DriverInfo addOrCreateDriverInfo(String blockId, String driverId) {
+        if (driversLoc.get(blockId) == null) {
+            driversLoc.put(blockId, new HashMap<>());
         }
-        Map<Integer, Object> driverMap = driversInBlock.get(blockId);
+        Map<String, Object> driverMap = driversLoc.get(blockId);
         if (driverMap.get(driverId) == null) {
             driverMap.put(driverId, new DriverInfo());
         }
@@ -125,11 +125,11 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         return driverInfo;
     }
 
-    private void deleteDriverInfo(Integer blockId, Integer driverId) {
-        if (driversInBlock.get(blockId) == null) {
-            driversInBlock.put(blockId, new HashMap<>());
+    private void deleteDriverInfo(String blockId, String driverId) {
+        if (driversLoc.get(blockId) == null) {
+            driversLoc.put(blockId, new HashMap<>());
         }
-        Map<Integer, Object> blockMap = driversInBlock.get(blockId);
+        Map<String, Object> blockMap = driversLoc.get(blockId);
         blockMap.remove(driverId);
     }
 
@@ -137,8 +137,8 @@ public class DriverMatchTask implements StreamTask, InitableTask {
     @SuppressWarnings("unchecked")
     public void init(Context context) throws Exception {
         // Initialize (maybe the kv stores?)
-        driversInBlock = (KeyValueStore<Integer, Map<Integer, Object>>) context.getTaskContext()
-                .getStore("drivers-in-block");
+        driversLoc = (KeyValueStore<String, Map<String, Object>>) context.getTaskContext()
+                .getStore("driver-loc");
     }
 
     private Boolean statusToBool(String status) {
@@ -154,7 +154,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
     /**
      * delete driver info from the block
      */
-    private void processLeavingBlock(Integer blockId, Integer driverId, Double longitude,
+    private void processLeavingBlock(String blockId, String driverId, Double longitude,
             Double latitude, String status) {
         deleteDriverInfo(blockId, driverId);
     }
@@ -162,7 +162,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
     /**
      * add or update driver info
      */
-    private void processEnteringBlock(Integer blockId, Integer driverId, Double longitude,
+    private void processEnteringBlock(String blockId, String driverId, Double longitude,
             Double latitude, String status, Double rating, Integer salary, String gender) {
         DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
         driverInfo.update(longitude, latitude, statusToBool(status), rating, salary, gender);
@@ -171,7 +171,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
     /**
      * add or update driver info
      */
-    private void processRideComplete(Integer blockId, Integer driverId, Double longitude,
+    private void processRideComplete(String blockId, String driverId, Double longitude,
             Double latitude, Double rating, Integer salary, String gender) {
         DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
         String status = "AVAILABLE";
@@ -182,17 +182,17 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      * find available driver with the maximum matching score in the same block
      * feed to output stream
      */
-    private void processRideQuest(Integer blockId, Integer clientId, Double longitude,
+    private void processRideQuest(String blockId, String clientId, Double longitude,
             Double latitude, String genderPreference, MessageCollector collector) {
-        if (driversInBlock.get(blockId) == null) {
-            driversInBlock.put(blockId, new HashMap<>());
+        if (driversLoc.get(blockId) == null) {
+            driversLoc.put(blockId, new HashMap<>());
         }
-        Map<Integer, Object> driverMap = driversInBlock.get(blockId);
+        Map<String, Object> driverMap = driversLoc.get(blockId);
         // find driver with best matching score
-        Integer bestMatchId = null;
+        String bestMatchId = null;
         Double bestMatchScore = -1.0;
-        for (Map.Entry<Integer, Object> entry : driverMap.entrySet()) {
-            Integer driverId = entry.getKey();
+        for (Map.Entry<String, Object> entry : driverMap.entrySet()) {
+            String driverId = entry.getKey();
             DriverInfo driverInfo = (DriverInfo) entry.getValue();
             if (driverInfo.isAvailable()) {
                 Double matchScore = driverInfo.getMatchScore(
@@ -205,7 +205,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         }
         // emit clientId bestmatchId pair to output stream
         if (bestMatchId != null) {
-            Map<String, Integer> messageMap = new HashMap<>();
+            Map<String, String> messageMap = new HashMap<>();
             messageMap.put("clientId", clientId);
             messageMap.put("driverId", bestMatchId);
             OutgoingMessageEnvelope envelope = new OutgoingMessageEnvelope(
@@ -218,30 +218,30 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      * process event stream message
      */
     private void processEvents(Map<String, Object> msg, MessageCollector collector) {
-        Integer blockId = (Integer) msg.get("blockId");
+        String blockId = (String) msg.get("blockId");
         Double longitude = (Double) msg.get("longitude");
         Double latitude = (Double) msg.get("latitude");
 
         String type = (String) msg.get("type");
         if (type.equals("LEAVING_BLOCK")) {
-            Integer driverId = (Integer) msg.get("driverId");
+            String driverId = (String) msg.get("driverId");
             String status = (String) msg.get("available");
             processLeavingBlock(blockId, driverId, longitude, latitude, status);
         } else if (type.equals("ENTERING_BLOCK")) {
-            Integer driverId = (Integer) msg.get("driverId");
+            String driverId = (String) msg.get("driverId");
             String status = (String) msg.get("available");
             Double rating = (Double) msg.get("rating");
             Integer salary = (Integer) msg.get("salary");
             String gender = (String) msg.get("gender");
             processEnteringBlock(blockId, driverId, longitude, latitude, status, rating, salary, gender);
         } else if (type.equals("RIDE_COMPLETE")) {
-            Integer driverId = (Integer) msg.get("driverId");
+            String driverId = (String) msg.get("driverId");
             Double rating = (Double) msg.get("rating");
             Integer salary = (Integer) msg.get("salary");
             String gender = (String) msg.get("gender");
             processRideComplete(blockId, driverId, longitude, latitude, rating, salary, gender);
         } else if (type.equals("RIDE_REQUEST")) {
-            Integer clientId = (Integer) msg.get("clientId");
+            String clientId = (String) msg.get("clientId");
             String genderPreference = (String) msg.get("gender_preference");
             processRideQuest(blockId, clientId, longitude, latitude, genderPreference, collector);
         } else {
@@ -254,8 +254,8 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      * process driver-locations stream message
      */
     private void processDriverLocation(Map<String, Object> msg) {
-        Integer blockId = (Integer) msg.get("blockId");
-        Integer driverId = (Integer) msg.get("driverId");
+        String blockId = (String) msg.get("blockId");
+        String driverId = (String) msg.get("driverId");
         Double longitude = (Double) msg.get("longitude");
         Double latitude = (Double) msg.get("latitude");
 
