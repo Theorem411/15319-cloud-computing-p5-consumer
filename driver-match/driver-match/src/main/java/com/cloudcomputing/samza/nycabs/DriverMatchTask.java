@@ -254,7 +254,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      * process driver-locations stream message
      */
     private void processDriverLocation(Map<String, Object> msg) {
-        System.out.println("debug processDriverLocation...");
+        // System.out.println("debug processDriverLocation...");
         System.out.println(msg.toString());
         String blockId = msg.get("blockId").toString();
         String driverId = msg.get("driverId").toString();
