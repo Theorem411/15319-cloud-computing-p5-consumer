@@ -12,100 +12,100 @@ import org.apache.samza.task.MessageCollector;
 import org.apache.samza.task.StreamTask;
 import org.apache.samza.task.TaskCoordinator;
 
-private class DriverInfo {
-    private Boolean availability;
-    private Float longitude;
-    private Float latitude;
-    private Float rating;
-    private String gender;
-    private Integer salary;
-
-    DriverInfo() {
-    }
-
-    public Boolean isAvailable() {
-        return availability != null && availability;
-    }
-
-    public void update(Float longitude, Float latitude, Boolean availability,
-            Float rating, Integer salary, String gender) {
-        this.longitude = longitude;
-        this.latitude = latitude;
-        this.availability = availability;
-        this.rating = rating;
-        this.salary = salary;
-        this.gender = gender;
-    }
-
-    private Float getGenderScore(String genderPreference) {
-        if (gender == null) {
-            return null;
-        }
-        if (genderPreference.equals("N")) {
-            return 1.0;
-        } else {
-            if (gender.equals(genderPreference)) {
-                return 1.0;
-            } else {
-                return 0.0;
-            }
-        }
-    }
-
-    private Float getDistanceScore(Float clientLongitude, Float clientLatitude) {
-        Float diffLongitude = clientLongitude - this.longitude;
-        Float diffLatitude = clientLatitude - this.latitude;
-        return Math.exp(
-                -Math.sqrt(diffLongitude * diffLongitude + diffLatitude * diffLatitude));
-    }
-
-    private Float getRatingScore() {
-        if (rating == null)
-            return null;
-        return rating / 5.0;
-    }
-
-    private Float getSalaryScore() {
-        if (salary == null)
-            return null;
-        return 1 - (salary / 100.0);
-    }
-
-    /**
-     * Computes match scores with this driver
-     * 
-     * @req only call when driver is properly initialized
-     * @return null if this driver is invalid
-     */
-    public Float getMatchScore(Float clientLongitude, Float clientLatitude,
-            String genderPreference) {
-        Float genderScore = getGenderScore(genderPreference);
-        if (genderScore == null) {
-            return null;
-        }
-        Float distScore = getDistanceScore(clientLongitude, clientLatitude);
-        if (distScore == null) {
-            return null;
-        }
-        Float ratingScore = getRatingScore();
-        if (ratingScore == null) {
-            return null;
-        }
-        Float salaryScore = getSalaryScore();
-        if (salaryScore == null) {
-            return null;
-        }
-
-        return 0.4 * distScore + 0.1 * genderScore + 0.3 * ratingScore + 0.2 * salaryScore;
-    }
-}
-
 /**
  * Consumes the stream of driver location updates and rider cab requests.
  * Outputs a stream which joins these 2 streams and gives a stream of rider to
  * driver matches.
  */
 public class DriverMatchTask implements StreamTask, InitableTask {
+    private class DriverInfo {
+        private Boolean availability;
+        private Double longitude;
+        private Double latitude;
+        private Double rating;
+        private String gender;
+        private Integer salary;
+    
+        DriverInfo() {
+        }
+    
+        public Boolean isAvailable() {
+            return availability != null && availability;
+        }
+    
+        public void update(Double longitude, Double latitude, Boolean availability,
+                Double rating, Integer salary, String gender) {
+            this.longitude = longitude;
+            this.latitude = latitude;
+            this.availability = availability;
+            this.rating = rating;
+            this.salary = salary;
+            this.gender = gender;
+        }
+    
+        private Double getGenderScore(String genderPreference) {
+            if (gender == null) {
+                return null;
+            }
+            if (genderPreference.equals("N")) {
+                return 1.0;
+            } else {
+                if (gender.equals(genderPreference)) {
+                    return 1.0;
+                } else {
+                    return 0.0;
+                }
+            }
+        }
+    
+        private Double getDistanceScore(Double clientLongitude, Double clientLatitude) {
+            Double diffLongitude = clientLongitude - this.longitude;
+            Double diffLatitude = clientLatitude - this.latitude;
+            return Math.exp(
+                    -Math.sqrt(diffLongitude * diffLongitude + diffLatitude * diffLatitude));
+        }
+    
+        private Double getRatingScore() {
+            if (rating == null)
+                return null;
+            return rating / 5.0;
+        }
+    
+        private Double getSalaryScore() {
+            if (salary == null)
+                return null;
+            return 1 - (salary / MAX_MONEY);
+        }
+    
+        /**
+         * Computes match scores with this driver
+         * 
+         * @req only call when driver is properly initialized
+         * @return null if this driver is invalid
+         */
+        public Double getMatchScore(Double clientLongitude, Double clientLatitude,
+                String genderPreference) {
+            Double genderScore = getGenderScore(genderPreference);
+            if (genderScore == null) {
+                return null;
+            }
+            Double distScore = getDistanceScore(clientLongitude, clientLatitude);
+            if (distScore == null) {
+                return null;
+            }
+            Double ratingScore = getRatingScore();
+            if (ratingScore == null) {
+                return null;
+            }
+            Double salaryScore = getSalaryScore();
+            if (salaryScore == null) {
+                return null;
+            }
+    
+            return 0.4 * distScore + 0.1 * genderScore + 0.3 * ratingScore + 0.2 * salaryScore;
+        }
+    }
+    
     /*
      * Define per task state here. (kv stores etc)
      * READ Samza API part in Writeup to understand how to start
@@ -121,7 +121,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         if (driverMap.get(driverId) == null) {
             driverMap.put(driverId, new DriverInfo());
         }
-        DriverInfo driverInfo = driverMap.get(driverId);
+        DriverInfo driverInfo = (DriverInfo) driverMap.get(driverId);
         return driverInfo;
     }
 
@@ -137,7 +137,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
     @SuppressWarnings("unchecked")
     public void init(Context context) throws Exception {
         // Initialize (maybe the kv stores?)
-        driversInBlock = (KeyValueStore<String, Map<String, Object>>) context.getTaskContext()
+        driversInBlock = (KeyValueStore<Integer, Map<Integer, Object>>) context.getTaskContext()
                 .getStore("drivers-in-block");
     }
 
@@ -154,16 +154,16 @@ public class DriverMatchTask implements StreamTask, InitableTask {
     /**
      * delete driver info from the block
      */
-    private void processLeavingBlock(Integer blockId, Integer driverId, Float longitude,
-            Float latitude, String status) {
+    private void processLeavingBlock(Integer blockId, Integer driverId, Double longitude,
+            Double latitude, String status) {
         deleteDriverInfo(blockId, driverId);
     }
 
     /**
      * add or update driver info
      */
-    private void processEnteringBlock(Integer blockId, Integer driverId, Float longitude,
-            Float latitude, String status, Float rating, Integer salary, String gender) {
+    private void processEnteringBlock(Integer blockId, Integer driverId, Double longitude,
+            Double latitude, String status, Double rating, Integer salary, String gender) {
         DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
         driverInfo.update(longitude, latitude, statusToBool(status), rating, salary, gender);
     }
@@ -171,8 +171,8 @@ public class DriverMatchTask implements StreamTask, InitableTask {
     /**
      * add or update driver info
      */
-    private void processRideComplete(Integer blockId, Integer driverId, Float longitude,
-            Float latitude, Float rating, Integer salary, String gender) {
+    private void processRideComplete(Integer blockId, Integer driverId, Double longitude,
+            Double latitude, Double rating, Integer salary, String gender) {
         DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
         String status = "AVAILABLE";
         driverInfo.update(longitude, latitude, statusToBool(status), rating, salary, gender);
@@ -182,20 +182,20 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      * find available driver with the maximum matching score in the same block
      * feed to output stream
      */
-    private void processRideQuest(Integer blockId, Integer clientId, Float longitude,
-            Float latitude, String genderPreference, MessageCollector collector) {
+    private void processRideQuest(Integer blockId, Integer clientId, Double longitude,
+            Double latitude, String genderPreference, MessageCollector collector) {
         if (driversInBlock.get(blockId) == null) {
             driversInBlock.put(blockId, new HashMap<>());
         }
-        Map<String, Object> driverMap = driversInBlock.get(blockId);
+        Map<Integer, Object> driverMap = driversInBlock.get(blockId);
         // find driver with best matching score
         Integer bestMatchId = null;
-        Float bestMatchScore = -1.0;
-        for (Map.Entry<Integer, DriverInfo> entry : driverMap.entrySet()) {
+        Double bestMatchScore = -1.0;
+        for (Map.Entry<Integer, Object> entry : driverMap.entrySet()) {
             Integer driverId = entry.getKey();
-            DriverInfo driverInfo = entry.getValue();
+            DriverInfo driverInfo = (DriverInfo) entry.getValue();
             if (driverInfo.isAvailable()) {
-                Float matchScore = driverInfo.getMatchScore(
+                Double matchScore = driverInfo.getMatchScore(
                         longitude, latitude, genderPreference);
                 if (matchScore != null && matchScore > bestMatchScore) {
                     bestMatchId = driverId;
@@ -205,11 +205,11 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         }
         // emit clientId bestmatchId pair to output stream
         if (bestMatchId != null) {
-            Map<String, Integer> messageMap;
+            Map<String, Integer> messageMap = new HashMap<>();
             messageMap.put("clientId", clientId);
             messageMap.put("driverId", bestMatchId);
             OutgoingMessageEnvelope envelope = new OutgoingMessageEnvelope(
-                    DriverMatchConfig.MATCH_STREAM.getStream(), messageMap);
+                    DriverMatchConfig.MATCH_STREAM, messageMap);
             collector.send(envelope);
         }
     }
@@ -219,8 +219,8 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      */
     private void processEvents(Map<String, Object> msg, MessageCollector collector) {
         Integer blockId = (Integer) msg.get("blockId");
-        Float longitude = (Float) msg.get("longitude");
-        Float latitude = (Float) msg.get("latitude");
+        Double longitude = (Double) msg.get("longitude");
+        Double latitude = (Double) msg.get("latitude");
 
         String type = (String) msg.get("type");
         if (type.equals("LEAVING_BLOCK")) {
@@ -230,13 +230,13 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         } else if (type.equals("ENTERING_BLOCK")) {
             Integer driverId = (Integer) msg.get("driverId");
             String status = (String) msg.get("available");
-            Float rating = (Float) msg.get("rating");
+            Double rating = (Double) msg.get("rating");
             Integer salary = (Integer) msg.get("salary");
             String gender = (String) msg.get("gender");
             processEnteringBlock(blockId, driverId, longitude, latitude, status, rating, salary, gender);
         } else if (type.equals("RIDE_COMPLETE")) {
             Integer driverId = (Integer) msg.get("driverId");
-            Float rating = (Float) msg.get("rating");
+            Double rating = (Double) msg.get("rating");
             Integer salary = (Integer) msg.get("salary");
             String gender = (String) msg.get("gender");
             processRideComplete(blockId, driverId, longitude, latitude, rating, salary, gender);
@@ -246,6 +246,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
             processRideQuest(blockId, clientId, longitude, latitude, genderPreference, collector);
         } else {
             // wrong type for events stream
+            throw new IllegalArgumentException("Events stream receives wrong type");
         }
     }
 
@@ -255,8 +256,8 @@ public class DriverMatchTask implements StreamTask, InitableTask {
     private void processDriverLocation(Map<String, Object> msg) {
         Integer blockId = (Integer) msg.get("blockId");
         Integer driverId = (Integer) msg.get("driverId");
-        Float longitude = (Float) msg.get("longitude");
-        Float latitude = (Float) msg.get("latitude");
+        Double longitude = (Double) msg.get("longitude");
+        Double latitude = (Double) msg.get("latitude");
 
         DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
         driverInfo.update(longitude, latitude, null, null, null, null);
