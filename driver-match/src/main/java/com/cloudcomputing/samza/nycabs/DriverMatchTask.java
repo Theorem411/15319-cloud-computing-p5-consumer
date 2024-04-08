@@ -200,6 +200,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
                 if (matchScore != null && matchScore > bestMatchScore) {
                     bestMatchId = driverId;
                     bestMatchScore = matchScore;
+                    System.out.println("best matchScore updated! " + bestMatchId + ": " + bestMatchScore.toString());
                 }
             }
         }
