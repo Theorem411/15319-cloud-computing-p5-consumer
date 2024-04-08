@@ -242,7 +242,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
             String gender = (String) msg.get("gender");
             processRideComplete(blockId, driverId, longitude, latitude, rating, userRating, salary, gender);
         } else if (type.equals("RIDE_REQUEST")) {
-            String clientId = (String) msg.get("clientId");
+            String clientId = msg.get("clientId").toString();
             String genderPreference = (String) msg.get("gender_preference");
             processRideQuest(blockId, clientId, longitude, latitude, genderPreference, collector);
         } else {
