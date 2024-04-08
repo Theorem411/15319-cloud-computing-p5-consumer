@@ -196,6 +196,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
             String driverId = entry.getKey();
             DriverInfo driverInfo = (DriverInfo) entry.getValue();
             if (driverInfo.isAvailable()) {
+                System.out.println(driverId);
                 Double matchScore = driverInfo.getMatchScore(
                         longitude, latitude, genderPreference);
                 if (matchScore != null && matchScore > bestMatchScore) {
