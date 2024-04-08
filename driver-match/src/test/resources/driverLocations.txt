@@ -1,1 +1,0 @@
-{"driverId":131,"blockId":5648,"latitude":40.7519871,"longitude":-74.0047584,"type":"DRIVER_LOCATION"}
