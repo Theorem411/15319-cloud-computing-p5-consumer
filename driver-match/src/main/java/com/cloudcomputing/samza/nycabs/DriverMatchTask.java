@@ -225,11 +225,11 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         String type = (String) msg.get("type");
         if (type.equals("LEAVING_BLOCK")) {
             String driverId = msg.get("driverId").toString();
-            String status = (String) msg.get("available");
+            String status = (String) msg.get("status");
             processLeavingBlock(blockId, driverId, longitude, latitude, status);
         } else if (type.equals("ENTERING_BLOCK")) {
             String driverId = msg.get("driverId").toString();
-            String status = (String) msg.get("available");
+            String status = (String) msg.get("status");
             Double rating = (Double) msg.get("rating");
             Integer salary = (Integer) msg.get("salary");
             String gender = (String) msg.get("gender");
