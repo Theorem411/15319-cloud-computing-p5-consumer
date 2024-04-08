@@ -184,6 +184,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      */
     private void processRideQuest(String blockId, String clientId, Double longitude,
             Double latitude, String genderPreference, MessageCollector collector) {
+        System.out.println("new test!");
         if (driversLoc.get(blockId) == null) {
             driversLoc.put(blockId, new HashMap<>());
         }
