@@ -278,10 +278,10 @@ public class DriverMatchTask implements StreamTask, InitableTask {
          */
         String incomingStream = envelope.getSystemStreamPartition().getStream();
 
-        if (incomingStream.equals(DriverMatchConfig.DRIVER_LOC_STREAM.getStream())) {
+        if (incomingStream.equals(DriverMatchConfig.EVENT_STREAM.getStream())) {
             // Handle Driver Location messages
             processEvents((Map<String, Object>) envelope.getMessage(), collector);
-        } else if (incomingStream.equals(DriverMatchConfig.EVENT_STREAM.getStream())) {
+        } else if (incomingStream.equals(DriverMatchConfig.DRIVER_LOC_STREAM.getStream())) {
             // Handle Event messages
             processDriverLocation((Map<String, Object>) envelope.getMessage());
         } else {
