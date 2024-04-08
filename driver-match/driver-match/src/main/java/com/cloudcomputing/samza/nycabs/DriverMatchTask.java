@@ -172,10 +172,10 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      * add or update driver info
      */
     private void processRideComplete(String blockId, String driverId, Double longitude,
-            Double latitude, Double rating, Integer salary, String gender) {
+            Double latitude, Double rating, Double user_rating, Integer salary, String gender) {
         DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
         String status = "AVAILABLE";
-        driverInfo.update(longitude, latitude, statusToBool(status), rating, salary, gender);
+        driverInfo.update(longitude, latitude, statusToBool(status), (rating + user_rating) / 2.0, salary, gender);
     }
 
     /**
@@ -237,9 +237,10 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         } else if (type.equals("RIDE_COMPLETE")) {
             String driverId = msg.get("driverId").toString();
             Double rating = (Double) msg.get("rating");
+            Double userRating = (Double) msg.get("user_rating");
             Integer salary = (Integer) msg.get("salary");
             String gender = (String) msg.get("gender");
-            processRideComplete(blockId, driverId, longitude, latitude, rating, salary, gender);
+            processRideComplete(blockId, driverId, longitude, latitude, rating, userRating, salary, gender);
         } else if (type.equals("RIDE_REQUEST")) {
             String clientId = (String) msg.get("clientId");
             String genderPreference = (String) msg.get("gender_preference");
