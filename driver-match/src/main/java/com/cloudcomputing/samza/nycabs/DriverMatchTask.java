@@ -27,6 +27,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         private Integer salary;
     
         DriverInfo() {
+            this.availability = false;
         }
     
         public Boolean isAvailable() {
@@ -55,9 +56,6 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         }
     
         private Double getGenderScore(String genderPreference) {
-            if (gender == null) {
-                return null;
-            }
             if (genderPreference.equals("N")) {
                 return 1.0;
             } else {
@@ -77,14 +75,10 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         }
     
         private Double getRatingScore() {
-            if (rating == null)
-                return null;
             return rating / 5.0;
         }
     
         private Double getSalaryScore() {
-            if (salary == null)
-                return null;
             return 1 - (salary / MAX_MONEY);
         }
     
@@ -97,22 +91,9 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         public Double getMatchScore(Double clientLongitude, Double clientLatitude,
                 String genderPreference) {
             Double genderScore = getGenderScore(genderPreference);
-            if (genderScore == null) {
-                return null;
-            }
             Double distScore = getDistanceScore(clientLongitude, clientLatitude);
-            if (distScore == null) {
-                return null;
-            }
             Double ratingScore = getRatingScore();
-            if (ratingScore == null) {
-                return null;
-            }
             Double salaryScore = getSalaryScore();
-            if (salaryScore == null) {
-                return null;
-            }
-    
             return 0.4 * distScore + 0.1 * genderScore + 0.3 * ratingScore + 0.2 * salaryScore;
         }
     }
