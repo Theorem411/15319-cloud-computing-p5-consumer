@@ -41,7 +41,7 @@ public class TestDriverMatchTask {
                 .addConfig("deploy.test", "true")
                 .run(Duration.ofSeconds(5));
 
-        Assert.assertEquals(4, TestRunner.consumeStream(outputMatchStream, Duration.ofSeconds(10)).get(0).size());
+        Assert.assertEquals(5, TestRunner.consumeStream(outputMatchStream, Duration.ofSeconds(10)).get(0).size());
 
         ListIterator<Object> resultIter = TestRunner.consumeStream(outputMatchStream, Duration.ofSeconds(10)).get(0).listIterator();
         // gender test
