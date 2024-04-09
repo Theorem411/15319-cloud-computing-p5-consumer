@@ -64,11 +64,21 @@ public class TestDriverMatchTask {
         Assert.assertTrue(ratingTest.get("clientId").toString().equals("5")
                 && ratingTest.get("driverId").toString().equals("8000"));
                 
-        // failed
+        // distance test
         System.out.println("Distance Test...");
         Map<String, Object> distanceTest = (Map<String, Object>) resultIter.next();
         System.out.println(distanceTest.toString());
         Assert.assertTrue(distanceTest.get("clientId").toString().equals("6")
                 && distanceTest.get("driverId").toString().equals("7001"));
+        
+        // status test
+        System.out.println("Status test...");
+        Map<String, Object> statusTest = (Map<String, Object>) resultIter.next();
+        System.out.println(statusTest.toString());
+        Assert.assertTrue(statusTest.get("clientId").toString().equals("7")
+                && statusTest.get("driverId").toString().equals("5001"));
+
+        // no driver test
+        
     }
 }

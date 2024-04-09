@@ -94,9 +94,6 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         }
     
         private Double getSalaryScore() {
-            if (this.salary == null) {
-                System.out.println(this.driverId + " has null salary");
-            }
             return 1 - (this.salary / MAX_MONEY);
         }
     
@@ -201,7 +198,6 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      */
     private void processRideRequest(String blockId, String clientId, Double longitude,
             Double latitude, String genderPreference, MessageCollector collector) {
-        System.out.println("new ride request test!");
         if (driversLoc.get(blockId) == null) {
             driversLoc.put(blockId, new HashMap<>());
         }
@@ -213,13 +209,10 @@ public class DriverMatchTask implements StreamTask, InitableTask {
             String driverId = entry.getKey();
             DriverInfo driverInfo = (DriverInfo) entry.getValue();
             if (driverInfo.isAvailable()) {
-                System.out.println("driver...\n" + driverInfo.toString());
                 Double matchScore = driverInfo.getMatchScore(longitude, latitude, genderPreference);
-                System.out.println(driverId + " got score " + matchScore.toString());
                 if (matchScore != null && matchScore > bestMatchScore) {
                     bestMatchId = driverId;
                     bestMatchScore = matchScore;
-                    System.out.println("best matchScore updated! " + bestMatchId + ": " + bestMatchScore.toString());
                 }
             }
         }
@@ -255,8 +248,6 @@ public class DriverMatchTask implements StreamTask, InitableTask {
             String status = (String) msg.get("status");
             Double rating = (Double) msg.get("rating");
             Integer salary = (Integer) msg.get("salary");
-            // DEBUG: /////
-            System.out.println(driverId.toString() + " with salary " + salary.toString() + " enters the block");
             String gender = (String) msg.get("gender");
             processEnteringBlock(blockId, driverId, longitude, latitude, status, rating, salary, gender);
         } else if (type.equals("RIDE_COMPLETE")) {
