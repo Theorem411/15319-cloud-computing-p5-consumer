@@ -33,14 +33,25 @@ public class DriverMatchTask implements StreamTask, InitableTask {
             return availability != null && availability;
         }
     
-        public void update(Double longitude, Double latitude, Boolean availability,
-                Double rating, Integer salary, String gender) {
+        public void updateAvailable(Boolean availability) {
+            this.availability = availability;
+        }
+
+        public void updateRating(Double rating) {
+            this.rating = rating;
+        }
+
+        public void updateSalary(Integer salary) {
+            this.salary = salary;
+        }
+
+        public void updateGender(String gender) {
+            this.gender = gender;
+        }
+
+        public void updatePosition(Double longitude, Double latitude) {
             this.longitude = longitude;
             this.latitude = latitude;
-            this.availability = availability;
-            this.rating = rating;
-            this.salary = salary;
-            this.gender = gender;
         }
     
         private Double getGenderScore(String genderPreference) {
@@ -165,7 +176,10 @@ public class DriverMatchTask implements StreamTask, InitableTask {
     private void processEnteringBlock(String blockId, String driverId, Double longitude,
             Double latitude, String status, Double rating, Integer salary, String gender) {
         DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
-        driverInfo.update(longitude, latitude, statusToBool(status), rating, salary, gender);
+        driverInfo.updatePosition(longitude, latitude);
+        driverInfo.updateAvailable(statusToBool(status));
+        driverInfo.updateRating(rating);
+        driverInfo.updateGender(gender);
     }
 
     /**
@@ -174,8 +188,11 @@ public class DriverMatchTask implements StreamTask, InitableTask {
     private void processRideComplete(String blockId, String driverId, Double longitude,
             Double latitude, Double rating, Double user_rating, Integer salary, String gender) {
         DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
-        String status = "AVAILABLE";
-        driverInfo.update(longitude, latitude, statusToBool(status), (rating + user_rating) / 2.0, salary, gender);
+        driverInfo.updatePosition(longitude, latitude);
+        driverInfo.updateAvailable(statusToBool("AVAILABLE"));
+        driverInfo.updateRating((rating + user_rating) / 2.0);
+        driverInfo.updateSalary(salary);
+        driverInfo.updateGender(gender);
     }
 
     /**
@@ -214,6 +231,9 @@ public class DriverMatchTask implements StreamTask, InitableTask {
             OutgoingMessageEnvelope envelope = new OutgoingMessageEnvelope(
                     DriverMatchConfig.MATCH_STREAM, messageMap);
             collector.send(envelope);
+            // 
+            DriverInfo driverInfo = (DriverInfo) driverMap.get(bestMatchId);
+            driverInfo.updateAvailable(statusToBool("UNAVAILABLE"));
         }
     }
 
@@ -264,7 +284,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         Double latitude = (Double) msg.get("latitude");
 
         DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
-        driverInfo.update(longitude, latitude, null, null, null, null);
+        driverInfo.updatePosition(longitude, latitude);
     }
 
     @Override
