@@ -18,12 +18,12 @@ public class DriverMatchTaskApplication implements TaskApplication {
     // Consider modify this zookeeper address, localhost may not be a good choice.
     // If this task application is executing in slave machine.
     /** TODO: Fill in Master node IP Addresses */
-    private static final List<String> KAFKA_CONSUMER_ZK_CONNECT = ImmutableList.of("172.31.24.152:2181"); // TODO: fill in
+    private static final List<String> KAFKA_CONSUMER_ZK_CONNECT = ImmutableList.of("172.31.19.122:2181"); // TODO: fill in
 
     // Consider modify the bootstrap servers address. This example only cover one
     // address.
     /** TODO: Fill in Bootstrap Servers IP Addresses */
-    private static final List<String> KAFKA_PRODUCER_BOOTSTRAP_SERVERS = ImmutableList.of("172.31.19.132:9092","172.31.31.17:9092","172.31.24.152:9092"); // TODO: fill in
+    private static final List<String> KAFKA_PRODUCER_BOOTSTRAP_SERVERS = ImmutableList.of("172.31.23.101:9092","172.31.23.109:9092","172.31.19.122:9092"); // TODO: fill in
     private static final Map<String, String> KAFKA_DEFAULT_STREAM_CONFIGS = ImmutableMap.of("replication.factor", "1");
 
     @Override
