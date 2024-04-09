@@ -177,6 +177,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId, longitude, latitude);
         driverInfo.updatePosition(longitude, latitude);
         driverInfo.updateAvailable(statusToBool(status));
+        driverInfo.updateSalary(salary);
         driverInfo.updateRating(rating);
         driverInfo.updateGender(gender);
     }
@@ -255,7 +256,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
             Double rating = (Double) msg.get("rating");
             Integer salary = (Integer) msg.get("salary");
             // DEBUG: /////
-            System.out.print(driverId.toString() + " with salary " + salary.toString() + " enters the block");
+            System.out.println(driverId.toString() + " with salary " + salary.toString() + " enters the block");
             String gender = (String) msg.get("gender");
             processEnteringBlock(blockId, driverId, longitude, latitude, status, rating, salary, gender);
         } else if (type.equals("RIDE_COMPLETE")) {
