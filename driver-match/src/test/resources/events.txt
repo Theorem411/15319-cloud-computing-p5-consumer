@@ -17,6 +17,7 @@
 {"blockId":5648,"driverId":7000,"latitude":0.0,"longitude":0.0,"type":"ENTERING_BLOCK","status":"AVAILABLE","rating":3.15,"salary":62,"gender":"M"}
 {"blockId":5648,"driverId":7001,"latitude":10.0,"longitude":10.0,"type":"ENTERING_BLOCK","status":"AVAILABLE","rating":3.15,"salary":62,"gender":"M"}
 {"blockId":5648,"clientId":6,"latitude":7.0,"longitude":7.0,"type":"RIDE_REQUEST","gender_preference":"N"}
+{"blockId":5648,"driverId":7000,"latitude":0.0,"longitude":0.0,"type":"LEAVING_BLOCK","status":"AVAILABLE"}
 // Test driver status
 {"blockId":5648,"driverId":5000,"latitude":1.0,"longitude":1.0,"type":"ENTERING_BLOCK","status":"UNAVAILABLE","rating":5.0,"salary":62,"gender":"M"}
 {"blockId":5648,"driverId":5001,"latitude":10.0,"longitude":10.0,"type":"ENTERING_BLOCK","status":"AVAILABLE","rating":3.0,"salary":62,"gender":"M"}
