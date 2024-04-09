@@ -183,11 +183,11 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      * add or update driver info
      */
     private void processRideComplete(String blockId, String driverId, Double longitude,
-            Double latitude, Double rating, Double user_rating, Integer salary, String gender) {
+            Double latitude, Double rating, Double userRating, Integer salary, String gender) {
         DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId, longitude, latitude);
         driverInfo.updatePosition(longitude, latitude);
         driverInfo.updateAvailable(statusToBool("AVAILABLE"));
-        driverInfo.updateRating((rating + user_rating) / 2.0);
+        driverInfo.updateRating((rating + userRating) / 2.0);
         driverInfo.updateSalary(salary);
         driverInfo.updateGender(gender);
     }
