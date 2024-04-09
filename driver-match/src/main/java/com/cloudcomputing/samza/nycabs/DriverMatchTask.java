@@ -19,6 +19,7 @@ import org.apache.samza.task.TaskCoordinator;
  */
 public class DriverMatchTask implements StreamTask, InitableTask {
     private class DriverInfo {
+        private String driverId;
         private Boolean availability;
         private Double longitude;
         private Double latitude;
@@ -26,8 +27,22 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         private String gender;
         private Integer salary;
     
-        DriverInfo() {
+        DriverInfo(String driverId, Double longitude, Double latitude) {
+            this.driverId = driverId;
+            this.longitude = longitude;
+            this.latitude = latitude;
             this.availability = false;
+        }
+
+        public String toString() {
+            return "{\ndriverId: " + String.valueOf(driverId) + ",\n" 
+                + "avail: " + String.valueOf(availability) + ",\n"
+                + "longitude: " + String.valueOf(longitude) + ",\n"
+                + "latitude: " + String.valueOf(latitude) + ",\n"
+                + "rating: " + String.valueOf(rating) + ",\n"
+                + "gender: " + String.valueOf(gender) + ",\n"
+                + "salary: " + String.valueOf(salary)
+                + "}\n";
         }
     
         public Boolean isAvailable() {
@@ -79,7 +94,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         }
     
         private Double getSalaryScore() {
-            return 1 - (salary / MAX_MONEY);
+            return 1 - (this.salary / MAX_MONEY);
         }
     
         /**
@@ -105,13 +120,13 @@ public class DriverMatchTask implements StreamTask, InitableTask {
     private double MAX_MONEY = 100.0;
     private KeyValueStore<String, Map<String, Object>> driversLoc;
 
-    private DriverInfo addOrCreateDriverInfo(String blockId, String driverId) {
+    private DriverInfo addOrCreateDriverInfo(String blockId, String driverId, Double longitude, Double latitude) {
         if (driversLoc.get(blockId) == null) {
             driversLoc.put(blockId, new HashMap<>());
         }
         Map<String, Object> driverMap = driversLoc.get(blockId);
         if (driverMap.get(driverId) == null) {
-            driverMap.put(driverId, new DriverInfo());
+            driverMap.put(driverId, new DriverInfo(driverId, longitude, latitude));
         }
         DriverInfo driverInfo = (DriverInfo) driverMap.get(driverId);
         return driverInfo;
@@ -156,7 +171,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      */
     private void processEnteringBlock(String blockId, String driverId, Double longitude,
             Double latitude, String status, Double rating, Integer salary, String gender) {
-        DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
+        DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId, longitude, latitude);
         driverInfo.updatePosition(longitude, latitude);
         driverInfo.updateAvailable(statusToBool(status));
         driverInfo.updateRating(rating);
@@ -168,7 +183,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      */
     private void processRideComplete(String blockId, String driverId, Double longitude,
             Double latitude, Double rating, Double user_rating, Integer salary, String gender) {
-        DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
+        DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId, longitude, latitude);
         driverInfo.updatePosition(longitude, latitude);
         driverInfo.updateAvailable(statusToBool("AVAILABLE"));
         driverInfo.updateRating((rating + user_rating) / 2.0);
@@ -180,7 +195,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      * find available driver with the maximum matching score in the same block
      * feed to output stream
      */
-    private void processRideQuest(String blockId, String clientId, Double longitude,
+    private void processRideRequest(String blockId, String clientId, Double longitude,
             Double latitude, String genderPreference, MessageCollector collector) {
         System.out.println("new test!");
         if (driversLoc.get(blockId) == null) {
@@ -194,9 +209,9 @@ public class DriverMatchTask implements StreamTask, InitableTask {
             String driverId = entry.getKey();
             DriverInfo driverInfo = (DriverInfo) entry.getValue();
             if (driverInfo.isAvailable()) {
-                Double matchScore = driverInfo.getMatchScore(
-                    longitude, latitude, genderPreference);
-                    System.out.println(driverId + " got score " + matchScore.toString());
+                System.out.println("driver...\n" + driverInfo.toString());
+                Double matchScore = driverInfo.getMatchScore(longitude, latitude, genderPreference);
+                System.out.println(driverId + " got score " + matchScore.toString());
                 if (matchScore != null && matchScore > bestMatchScore) {
                     bestMatchId = driverId;
                     bestMatchScore = matchScore;
@@ -248,7 +263,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         } else if (type.equals("RIDE_REQUEST")) {
             String clientId = msg.get("clientId").toString();
             String genderPreference = (String) msg.get("gender_preference");
-            processRideQuest(blockId, clientId, longitude, latitude, genderPreference, collector);
+            processRideRequest(blockId, clientId, longitude, latitude, genderPreference, collector);
         } else {
             // wrong type for events stream
             throw new IllegalArgumentException("Events stream receives wrong type");
@@ -264,7 +279,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         Double longitude = (Double) msg.get("longitude");
         Double latitude = (Double) msg.get("latitude");
 
-        DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId);
+        DriverInfo driverInfo = addOrCreateDriverInfo(blockId, driverId, longitude, latitude);
         driverInfo.updatePosition(longitude, latitude);
     }
 
