@@ -200,7 +200,7 @@ public class DriverMatchTask implements StreamTask, InitableTask {
      */
     private void processRideRequest(String blockId, String clientId, Double longitude,
             Double latitude, String genderPreference, MessageCollector collector) {
-        System.out.println("new test!");
+        System.out.println("new ride request test!");
         if (driversLoc.get(blockId) == null) {
             driversLoc.put(blockId, new HashMap<>());
         }
@@ -254,6 +254,8 @@ public class DriverMatchTask implements StreamTask, InitableTask {
             String status = (String) msg.get("status");
             Double rating = (Double) msg.get("rating");
             Integer salary = (Integer) msg.get("salary");
+            // DEBUG: /////
+            System.out.print(driverId.toString() + " with salary " + salary.toString() + " enters the block");
             String gender = (String) msg.get("gender");
             processEnteringBlock(blockId, driverId, longitude, latitude, status, rating, salary, gender);
         } else if (type.equals("RIDE_COMPLETE")) {
