@@ -79,6 +79,8 @@ public class TestDriverMatchTask {
                 && statusTest.get("driverId").toString().equals("5001"));
 
         // no driver test
+        System.out.println("No driver test...");
+        Assert.assertTrue(!resultIter.hasNext());
         
     }
 }
