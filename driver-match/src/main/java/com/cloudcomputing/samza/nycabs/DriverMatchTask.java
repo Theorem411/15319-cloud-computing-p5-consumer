@@ -35,12 +35,12 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         }
 
         public String toString() {
-            return "{\ndriverId: " + String.valueOf(driverId) + ",\n" 
-                + "avail: " + String.valueOf(availability) + ",\n"
-                + "longitude: " + String.valueOf(longitude) + ",\n"
-                + "latitude: " + String.valueOf(latitude) + ",\n"
-                + "rating: " + String.valueOf(rating) + ",\n"
-                + "gender: " + String.valueOf(gender) + ",\n"
+            return "{\ndriverId: " + String.valueOf(driverId) + ", " 
+                + "avail: " + String.valueOf(availability) + ", "
+                + "longitude: " + String.valueOf(longitude) + ", "
+                + "latitude: " + String.valueOf(latitude) + ", "
+                + "rating: " + String.valueOf(rating) + ", "
+                + "gender: " + String.valueOf(gender) + ", "
                 + "salary: " + String.valueOf(salary)
                 + "}\n";
         }
@@ -90,10 +90,13 @@ public class DriverMatchTask implements StreamTask, InitableTask {
         }
     
         private Double getRatingScore() {
-            return rating / 5.0;
+            return this.rating / 5.0;
         }
     
         private Double getSalaryScore() {
+            if (this.salary == null) {
+                System.out.println(this.driverId + " has null salary");
+            }
             return 1 - (this.salary / MAX_MONEY);
         }
     
